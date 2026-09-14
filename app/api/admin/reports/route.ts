@@ -90,6 +90,7 @@ export async function GET(req: Request) {
                 t.id,
                 t.code,
                 t.status,
+                t.score_at_call,
                 datetime(t.issued_at, 'localtime') as issued_at,
                 datetime(t.called_at, 'localtime') as called_at,
                 datetime(t.finished_at, 'localtime') as finished_at,
@@ -107,9 +108,9 @@ export async function GET(req: Request) {
 
         // Export as CSV
         if (format === 'csv') {
-            const csvHeader = 'Senha,Tipo,Status,Guichê,Atendente,Emitida,Chamada,Finalizada\n';
+            const csvHeader = 'Senha,Tipo,Status,Guichê,Atendente,Emitida,Chamada,Finalizada,Score\n';
             const csvRows = history.map((t: any) =>
-                `"${t.code}", "${t.type_description || ''}", "${t.status}", "${t.counter_number || ''}", "${t.attendant_name || ''}", "${t.issued_at || ''}", "${t.called_at || ''}", "${t.finished_at || ''}"`
+                `"${t.code}", "${t.type_description || ''}", "${t.status}", "${t.counter_number || ''}", "${t.attendant_name || ''}", "${t.issued_at || ''}", "${t.called_at || ''}", "${t.finished_at || ''}", "${t.score_at_call ?? ''}"`
             ).join('\n');
 
             return new NextResponse(csvHeader + csvRows, {

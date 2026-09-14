@@ -3,6 +3,18 @@ import { query, run, get } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+// Garante que a coluna score_at_call existe (executa apenas uma vez por processo)
+let scoreColumnEnsured = false;
+async function ensureScoreColumn() {
+    if (scoreColumnEnsured) return;
+    try {
+        await run(`ALTER TABLE tickets ADD COLUMN score_at_call INTEGER`, []);
+    } catch {
+        // Coluna já existe — ignorar erro
+    }
+    scoreColumnEnsured = true;
+}
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -149,6 +161,25 @@ export async function POST(req: Request) {
             if (result.changes > 0) {
                 // SUCCESS: We claimed the ticket
                 console.log(`Successfully claimed ticket ${ticket.code} after ${attempts} retries`);
+
+                // Calcular e salvar o score no momento da chamada
+                try {
+                    await ensureScoreColumn();
+                    const baseScore = ticket.priority === 1 ? 2000 : ticket.priority === 2 ? 1000 : 500;
+                    // Usa SQL para calcular o tempo de espera — evita problemas de fuso horário
+                    // issued_at é armazenado em UTC no SQLite, então strftime('%s','now') - strftime('%s', issued_at) é preciso
+                    await run(
+                        `UPDATE tickets 
+                         SET score_at_call = ? + MAX(0, CAST(strftime('%s', 'now') - strftime('%s', issued_at) AS INTEGER))
+                         WHERE id = ?`,
+                        [baseScore, ticket.id]
+                    );
+                    // Log para debug
+                    const saved = await get(`SELECT score_at_call, issued_at FROM tickets WHERE id = ?`, [ticket.id]);
+                    console.log(`Score at call for ticket ${ticket.code}: ${saved?.score_at_call} (base=${baseScore}, issued_at=${saved?.issued_at})`);
+                } catch (scoreErr) {
+                    console.warn('Could not save score_at_call:', scoreErr);
+                }
 
                 // 4.5 Update Priority Balance if Ratio Strategy
                 if (strategyType === 'RATIO' && strategy !== 'SPECIFIC' && strategy !== 'FIFO') {

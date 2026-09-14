@@ -14,7 +14,7 @@ type ReportData = {
     summary: { issued: number; served: number; no_show: number; waiting: number; avg_wait: number; };
     counters: { number: number; group_type: string; served_count: number; }[];
     users: { id: number; name: string; served_count: number; avg_service_time: number; }[];
-    history: { id: number; code: string; status: string; issued_at: string; called_at: string; finished_at: string; counter_number: number; type_description: string; attendant_name: string; }[];
+    history: { id: number; code: string; status: string; score_at_call?: number; issued_at: string; called_at: string; finished_at: string; counter_number: number; type_description: string; attendant_name: string; }[];
 };
 
 export default function AdminPage() {
@@ -93,6 +93,8 @@ export default function AdminPage() {
     const fetchCounters = async () => { const res = await fetch('/api/admin/counters'); const data = await res.json(); if (Array.isArray(data)) setCounters(data); };
     const fetchUsers = async () => { const res = await fetch('/api/admin/users'); const data = await res.json(); if (Array.isArray(data)) setUsers(data); };
     const fetchMedia = async () => { const res = await fetch('/api/admin/media'); const data = await res.json(); if (Array.isArray(data)) setMedia(data); };
+
+
     const fetchReport = async (period: string, startDate?: string, endDate?: string, status?: string) => {
         let url = `/api/admin/reports?period=${period}`;
         if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
@@ -1107,6 +1109,7 @@ export default function AdminPage() {
                                                             <th className="pb-2">Guichê</th>
                                                             <th className="pb-2">Atendente</th>
                                                             <th className="pb-2">Emitida</th>
+                                                            <th className="pb-2" title="Pontuação SMART no momento da chamada">🏆 Score</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -1129,6 +1132,21 @@ export default function AdminPage() {
                                                                 <td className="py-2 text-slate-300">{t.counter_number || '-'}</td>
                                                                 <td className="py-2 text-slate-300">{t.attendant_name || '-'}</td>
                                                                 <td className="py-2 text-slate-500">{t.issued_at?.replace('T', ' ')?.substring(0, 16) || '-'}</td>
+                                                                <td className="py-2 text-right">
+                                                                    {t.score_at_call != null ? (
+                                                                        <span
+                                                                            className={`px-2 py-0.5 rounded text-xs font-bold font-mono ${t.score_at_call >= 2000 ? 'bg-red-500/20 text-red-400' :
+                                                                                    t.score_at_call >= 1000 ? 'bg-yellow-500/20 text-yellow-400' :
+                                                                                        'bg-slate-600/30 text-slate-400'
+                                                                                }`}
+                                                                            title={`Pontuação SMART: ${t.score_at_call} pts`}
+                                                                        >
+                                                                            {t.score_at_call.toLocaleString()} pts
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-slate-600 text-xs">—</span>
+                                                                    )}
+                                                                </td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
