@@ -19,12 +19,10 @@ if %errorlevel% neq 0 (
     echo.
     echo Por favor, instale o Node.js em: https://nodejs.org/
     echo Baixe a versao LTS e instale. Depois reinicie o computador.
-    echo.
-    pause
-    exit /b 1
+    goto :fim
 )
 
-echo Node.js: 
+echo Node.js instalado: 
 node --version
 echo.
 
@@ -37,9 +35,8 @@ if not exist "node_modules" (
     if %errorlevel% neq 0 (
         echo.
         echo [ERRO] Falha ao instalar dependencias!
-        echo.
-        pause
-        exit /b 1
+        echo Verifique sua conexao com a internet e tente novamente.
+        goto :fim
     )
     echo.
     echo [OK] Dependencias instaladas com sucesso!
@@ -53,9 +50,7 @@ if not exist "app\generated\prisma" (
     if %errorlevel% neq 0 (
         echo.
         echo [ERRO] Falha ao gerar o Prisma Client!
-        echo.
-        pause
-        exit /b 1
+        goto :fim
     )
     echo [OK] Prisma Client gerado!
     echo.
@@ -74,7 +69,6 @@ echo.
 echo Exemplo: http://192.168.0.15:3000
 echo ---------------------------------------------------
 echo.
-
 echo Iniciando o sistema...
 echo Pressione CTRL+C para parar o servidor.
 echo.
@@ -82,7 +76,12 @@ echo.
 REM Inicia o servidor
 npm run dev
 
-REM Se chegar aqui, o servidor parou - mantem a janela aberta para ver o erro
 echo.
-echo [AVISO] O servidor foi encerrado ou ocorreu um erro acima.
-pause
+echo ===================================================
+echo   O servidor foi encerrado ou ocorreu um erro.
+echo ===================================================
+
+:fim
+echo.
+echo Pressione qualquer tecla para fechar esta janela...
+pause >nul
