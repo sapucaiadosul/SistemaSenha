@@ -56,6 +56,22 @@ if not exist "app\generated\prisma" (
     echo.
 )
 
+REM Verifica se o banco de dados principal existe; se nao, cria do zero
+if not exist "db\senhas.db" (
+    echo [AVISO] Banco de dados principal nao encontrado. Criando novo banco...
+    node db\init.js
+    if %errorlevel% neq 0 (
+        echo.
+        echo [ERRO] Falha ao criar o banco de dados!
+        goto :fim
+    )
+    echo [OK] Banco de dados criado com sucesso!
+    echo.
+)
+
+REM Aplica atualizacoes de estrutura no banco Prisma sem apagar dados existentes
+npx prisma db push --skip-generate >nul 2>&1
+
 echo Buscando Endereco IP da maquina...
 echo.
 ipconfig | findstr "IPv4"

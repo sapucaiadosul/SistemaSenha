@@ -37,3 +37,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Prisma generated client
+/app/generated/prisma
+
+# Bancos de dados locais (dados da farmacia - nunca sobrescrever via Git)
+/db/senhas.db
+/db/database.sqlite
+/prisma/dev.db
