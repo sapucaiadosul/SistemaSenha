@@ -1,12 +1,13 @@
+
 @echo off
 chcp 65001 >nul
 cls
 
-REM Garante que o diretorio de trabalho seja sempre a pasta onde este .bat esta localizado
+REM Garante que o diretorio de trabalho seja a pasta do sistema
 cd /d "%~dp0"
 
 echo ===================================================
-echo      INICIANDO SERVIDOR - SENHAS PRO
+echo       INICIANDO SERVIDOR - SENHAS PRO
 echo ===================================================
 echo.
 echo Pasta do sistema: %~dp0
@@ -15,86 +16,61 @@ echo.
 REM Verifica se o Node.js esta instalado
 where node >nul 2>&1
 if errorlevel 1 (
-    echo [ERRO] Node.js NAO encontrado!
-    echo.
-    echo Por favor, instale o Node.js em: https://nodejs.org/
-    echo Baixe a versao LTS e instale. Depois reinicie o computador.
+    echo [ERRO] Node.js nao encontrado!
+    echo Instale a versao LTS em https://nodejs.org/
     goto :fim
 )
 
-echo Node.js instalado: 
+echo Node.js instalado:
 node --version
 echo.
 
-REM Verifica se as dependencias estao instaladas
+REM Instala dependencias se necessario
 if not exist "node_modules" (
-    echo [AVISO] Dependencias nao encontradas. Instalando agora...
-    echo Isso pode levar alguns minutos na primeira vez. Aguarde...
-    echo.
+    echo [AVISO] Dependencias nao encontradas. Instalando...
     call npm.cmd install
-    if %errorlevel% neq 0 (
-        echo.
+    if errorlevel 1 (
         echo [ERRO] Falha ao instalar dependencias!
-        echo Verifique sua conexao com a internet e tente novamente.
         goto :fim
     )
-    echo.
-    echo [OK] Dependencias instaladas com sucesso!
-    echo.
 )
 
-REM Verifica se o Prisma Client foi gerado
-if not exist "app\generated\prisma" (
-    echo [AVISO] Prisma Client nao encontrado. Gerando...
-    call npx.cmd prisma generate
-    if %errorlevel% neq 0 (
-        echo.
-        echo [ERRO] Falha ao gerar o Prisma Client!
-        goto :fim
-    )
-    echo [OK] Prisma Client gerado!
-    echo.
-)
-
-REM Verifica se o banco de dados principal existe; se nao, cria do zero
+REM Cria o banco somente se ele ainda nao existir
 if not exist "db\senhas.db" (
-    echo [AVISO] Banco de dados principal nao encontrado. Criando novo banco...
+    echo [AVISO] Banco de dados nao encontrado. Criando...
     node db\init.js
-    if %errorlevel% neq 0 (
-        echo.
+    if errorlevel 1 (
         echo [ERRO] Falha ao criar o banco de dados!
         goto :fim
     )
-    echo [OK] Banco de dados criado com sucesso!
-    echo.
 )
 
-REM Aplica atualizacoes de estrutura no banco Prisma sem apagar dados existentes
-call npx.cmd prisma db push --skip-generate
-if errorlevel 1 (
-    echo [ERRO] Falha ao atualizar o banco Prisma!
-    goto :fim
+REM Gera a versao de producao caso ainda nao exista
+if not exist ".next\BUILD_ID" (
+    echo [AVISO] Build de producao nao encontrado. Gerando...
+    call npm.cmd run build
+    if errorlevel 1 (
+        echo [ERRO] Falha ao gerar o build!
+        goto :fim
+    )
 )
 
-echo Buscando Endereco IP da maquina...
+echo.
+echo Buscando endereco IP da maquina...
 echo.
 ipconfig | findstr "IPv4"
 echo.
 echo ---------------------------------------------------
-echo COPIE O IP ACIMA (Ex: 192.168.0.XX)
-echo.
-echo Para acessar de outros computadores, digite no navegador:
-echo http://SEU_IP_AQUI:3000
-echo.
-echo Exemplo: http://192.168.0.15:3000
+echo Acesse pelos outros computadores usando:
+echo http://IP_DA_MAQUINA:3000
 echo ---------------------------------------------------
 echo.
-echo Iniciando o sistema...
-echo Pressione CTRL+C para parar o servidor.
+echo Iniciando servidor de producao...
+echo Pressione CTRL+C para parar.
 echo.
 
-REM Inicia o servidor
-call npm.cmd run dev
+REM Inicia o servidor acessivel pela rede local
+call npm.cmd run start -- -H 0.0.0.0 -p 3000
 
 echo.
 echo ===================================================

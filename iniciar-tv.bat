@@ -10,7 +10,7 @@ REM Alternativa para Chrome 32-bit
 if not exist %CHROME% set CHROME="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 
 REM URL do Painel TV (ajuste a porta se necessário)
-set URL=http://localhost:3001/tv
+set URL=http://localhost:3000/tv
 
 REM Inicia Chrome em modo quiosque com autoplay habilitado
 %CHROME% --kiosk --autoplay-policy=no-user-gesture-required --disable-infobars --disable-session-crashed-bubble --no-first-run %URL%

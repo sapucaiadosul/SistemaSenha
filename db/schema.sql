@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   issued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   called_at DATETIME,
   finished_at DATETIME,
+  score_at_call INTEGER,
   FOREIGN KEY(ticket_type_id) REFERENCES ticket_types(id),
   FOREIGN KEY(counter_id) REFERENCES counters(id),
   FOREIGN KEY(user_id) REFERENCES users(id)
@@ -56,6 +57,11 @@ CREATE TABLE IF NOT EXISTS media (
   position INTEGER DEFAULT 0, -- display order
   active INTEGER DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 );
 
 -- Seed Initial Data
