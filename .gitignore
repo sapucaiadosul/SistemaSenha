@@ -30,9 +30,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Environment variables
+.env
+.env.*
+!.env.example
 
-
-
+# Bancos de dados locais
+/db/*.db
+/db/*.db-shm
+/db/*.db-wal
+/prisma/dev.db
 
 # typescript
 *.tsbuildinfo
